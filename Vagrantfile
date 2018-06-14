@@ -3,13 +3,17 @@
 
 require 'fileutils'
 
+Vagrant.require_version ">= 2.0.0"
+
 CONFIG = File.join(File.dirname(__FILE__), "vagrant/config.rb")
 
 # Uniq disk UUID for libvirt
 DISK_UUID = Time.now.utc.to_i
 
 SUPPORTED_OS = {
+
   "ubuntu"        => {box: "bento/ubuntu-16.04", bootstrap_os: "ubuntu", user: "vagrant"},
+
 }
 
 # Defaults for config options defined in CONFIG
@@ -42,7 +46,7 @@ if File.exist?(CONFIG)
   require CONFIG
 end
 
-$box = bento/ubuntu-16.04
+$box = SUPPORTED_OS[$os][:box]
 # if $inventory is not set, try to use example
 $inventory = File.join(File.dirname(__FILE__), "inventory", "sample") if ! $inventory
 
@@ -59,18 +63,14 @@ end
 
 
 
-
 Vagrant.configure("2") do |config|
   # always use Vagrants insecure key
   config.ssh.insert_key = false
-  config.vm.box = bento/ubuntu-16.04
-  config.vm.post_up_message = "All done!To see the vms for your new nodes run: vagrant status , to ssh into nodes run: vagrant ssh <node_name>"
-
-
+  config.vm.box = $box
   if SUPPORTED_OS[$os].has_key? :box_url
-    config.vm.box_url = bento/ubuntu-16.04
+    config.vm.box_url = SUPPORTED_OS[$os][:box_url]
   end
-  config.ssh.username = ubuntu
+  config.ssh.username = SUPPORTED_OS[$os][:user]
   # plugin conflict
   if Vagrant.has_plugin?("vagrant-vbguest") then
     config.vbguest.auto_update = false
@@ -79,9 +79,20 @@ Vagrant.configure("2") do |config|
     config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |config|
       config.vm.hostname = vm_name
 
+      if $expose_docker_tcp
+        config.vm.network "forwarded_port", guest: 2375, host: ($expose_docker_tcp + i - 1), auto_correct: true
+      end
 
+      $forwarded_ports.each do |guest, host|
+        config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+      end
 
-
+      ["vmware_fusion", "vmware_workstation"].each do |vmware|
+        config.vm.provider vmware do |v|
+          v.vmx['memsize'] = $vm_memory
+          v.vmx['numvcpus'] = $vm_cpus
+        end
+      end
 
       config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
 
@@ -129,7 +140,6 @@ Vagrant.configure("2") do |config|
       # when all the machines are up and ready.
       if i == $num_instances
         config.vm.provision "ansible" do |ansible|
-          ansible.verbose = "vv"
           ansible.playbook = "cluster.yml"
           if File.exist?(File.join(File.dirname($inventory), "hosts"))
             ansible.inventory_path = $inventory
@@ -145,10 +155,6 @@ Vagrant.configure("2") do |config|
             "kube-master" => ["#{$instance_name_prefix}-0[1:#{$kube_master_instances}]"],
             "kube-node" => ["#{$instance_name_prefix}-0[1:#{$kube_node_instances}]"],
             "k8s-cluster:children" => ["kube-master", "kube-node"],
-
-
-
-
           }
         end
       end
