@@ -17,11 +17,11 @@ SUPPORTED_OS = {
 }
 
 # Defaults for config options defined in CONFIG
-$num_instances = 4
+$num_instances = 2
 $instance_name_prefix = "k8s"
 $vm_gui = false
-$vm_memory = 3500
-$vm_cpus = 3
+$vm_memory = 1505
+$vm_cpus = 1
 $shared_folders = {}
 $forwarded_ports = {}
 $subnet = "172.17.8"
@@ -32,7 +32,7 @@ $etcd_instances = 1
 # The first two nodes are kube masters
 $kube_master_instances = $num_instances == 1 ? $num_instances : ($num_instances - 1)
 # All nodes are kube nodes
-$kube_node_instances = 3
+$kube_node_instances = 2
 # The following only works when using the libvirt provider
 $kube_node_instances_with_disks = false
 $kube_node_instances_with_disks_size = "20G"
@@ -87,12 +87,6 @@ Vagrant.configure("2") do |config|
         config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
       end
 
-      ["vmware_fusion", "vmware_workstation"].each do |vmware|
-        config.vm.provider vmware do |v|
-          v.vmx['memsize'] = $vm_memory
-          v.vmx['numvcpus'] = $vm_cpus
-        end
-      end
 
       config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
 
@@ -120,9 +114,13 @@ Vagrant.configure("2") do |config|
       }
 
       config.vm.network :private_network, ip: ip
+      config.ssh.username = "vagrant"
+      config.ssh.password = "vagrant"
+
 
       # Disable swap for each vm
       config.vm.provision "shell", inline: "swapoff -a"
+      config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
 
       if $kube_node_instances_with_disks
         # Libvirt
@@ -139,14 +137,15 @@ Vagrant.configure("2") do |config|
       # Only execute once the Ansible provisioner,
       # when all the machines are up and ready.
       if i == $num_instances
-        config.vm.provision "ansible" do |ansible|
+        config.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "cluster.yml"
+          ansible.install_mode = "pip"
+          ansible.inventory_path = "inventory/sample/vagrant_ansible_inventory"
           if File.exist?(File.join(File.dirname($inventory), "hosts"))
             ansible.inventory_path = $inventory
           end
           ansible.become = true
           ansible.limit = "all"
-          ansible.host_key_checking = false
           ansible.raw_arguments = ["--forks=#{$num_instances}", "--flush-cache"]
           ansible.host_vars = host_vars
           #ansible.tags = ['download']
