@@ -17,11 +17,11 @@ SUPPORTED_OS = {
 }
 
 # Defaults for config options defined in CONFIG
-$num_instances = 2
+$num_instances = 4
 $instance_name_prefix = "k8s"
 $vm_gui = false
-$vm_memory = 1505
-$vm_cpus = 1
+$vm_memory = 3500
+$vm_cpus = 3
 $shared_folders = {}
 $forwarded_ports = {}
 $subnet = "172.17.8"
@@ -32,7 +32,7 @@ $etcd_instances = 1
 # The first two nodes are kube masters
 $kube_master_instances = $num_instances == 1 ? $num_instances : ($num_instances - 1)
 # All nodes are kube nodes
-$kube_node_instances = 2
+$kube_node_instances = 4
 # The following only works when using the libvirt provider
 $kube_node_instances_with_disks = false
 $kube_node_instances_with_disks_size = "20G"
