@@ -1,11 +1,11 @@
 # -*- mode: ruby -*-
 # # vi: set ft=ruby :
 
-require 'fileutils'
+
 
 Vagrant.require_version ">= 2.0.0"
 
-CONFIG = File.join(File.dirname(__FILE__), "vagrant/config.rb")
+
 
 # Uniq disk UUID for libvirt
 DISK_UUID = Time.now.utc.to_i
@@ -17,7 +17,7 @@ SUPPORTED_OS = {
 }
 
 # Defaults for config options defined in CONFIG
-$num_instances = 3
+$num_instances = 2
 $instance_name_prefix = "k8s"
 $vm_gui = false
 $vm_memory = 1505
@@ -32,7 +32,7 @@ $etcd_instances = 1
 # The first two nodes are kube masters
 $kube_master_instances = $num_instances == 1 ? $num_instances : ($num_instances - 1)
 # All nodes are kube nodes
-$kube_node_instances = 3
+$kube_node_instances = 2
 # The following only works when using the libvirt provider
 $kube_node_instances_with_disks = false
 $kube_node_instances_with_disks_size = "20G"
@@ -42,24 +42,8 @@ $local_release_dir = "/vagrant/temp"
 
 host_vars = {}
 
-if File.exist?(CONFIG)
-  require CONFIG
-end
 
 $box = SUPPORTED_OS[$os][:box]
-# if $inventory is not set, try to use example
-#$inventory = File.join(File.dirname(__FILE__), "inventory", "sample") if ! $inventory
-
-# if $inventory has a hosts file use it, otherwise copy over vars etc
-# to where vagrant expects dynamic inventory to be.
-#if ! File.exist?(File.join(File.dirname($inventory), "hosts"))
-#  $vagrant_ansible = File.join(File.dirname(__FILE__), ".vagrant",
-#                       "provisioners", "ansible")
-#  FileUtils.mkdir_p($vagrant_ansible) if ! File.exist?($vagrant_ansible)
-#  if ! File.exist?(File.join($vagrant_ansible,"inventory"))
-#    FileUtils.ln_s($inventory, File.join($vagrant_ansible,"inventory"))
-#  end
-#end
 
 
 Vagrant.configure("2") do |config|
@@ -145,9 +129,6 @@ Vagrant.configure("2") do |config|
         config.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "cluster.yml"
           ansible.install_mode = "pip"
-#          if File.exist?(File.join(File.dirname($inventory), "hosts"))
-#            ansible.inventory_path = $inventory
-#          end
           ansible.become = true
           ansible.limit = "all"
           ansible.raw_arguments = ["--forks=#{$num_instances}", "--flush-cache"]
