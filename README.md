@@ -1,65 +1,25 @@
 # Vagrant For K8's
 
-This vagrant script shall install kubernetes cluster on your virtualbox .
+This vagrant script shall install kubernetes cluster on windows using vagrant and Virtualbox.
 ## Dependencies
   - Vagrant.require_version >= 2.0.0
-  - Headless virtualbox
-  - Ansible
+  - Virtualbox
+ 
 
-# VirtualBox Headless Installation
+# VirtualBox 
 
-Step 1: Update Ubuntu
+Download virtual box for windows from https://www.virtualbox.org/wiki/Downloads 
+follow the onscreen steps to install
 
-Before installing VirtualBox, run the commands below to update the Ubuntu server.   
 
-```bash
-$ sudo apt-get update && sudo apt-get dist-upgrade && sudo apt-get autoremove
-```
+# Install Vagrant On windows
 
-Step 2: Install Required Linux Headers
+Download vagrant from https://www.vagrantup.com/downloads.html
 
-Now that your system is updated, run the commands below to install required Ubuntu linux headers.
+after it's installed completely you can test using the command ```vagrant``` in command prompt
 
- ```bash
-$ sudo apt-get -y install gcc make linux-headers-$(uname -r) dkms
- ```
+```we dont need to install ansible as ansible would be automatically be installed on the master node and used to manage other nodes```
 
-Step 3: Add VirtualBox Repository and key
-
-After installing the required package above, run the commands below to install VirtualBox repository key.
-```bash
- $ wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
- $ wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
- ```
- Next run the commands below to add VirtualBox repository to your system.
-
- ```bash
- $ sudo sh -c 'echo "deb   http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib" >> /etc/apt/sources.list'
-```
-Step 4: Install VirtualBox
-
-After adding the repository and key, run the commands below to install VirtualBox 5.2. At the time of this writing the latest version of the software was 5.2. If there are newer versions available, please replace the 2 below with the current latest.
-```bash
- $ sudo apt-get update
- $ sudo apt-get install virtualbox-5.2
-```
-To verify if VirtualBox is installed, run the commands below.
-
- ``` VBoxManage -v```
-
-# Install Ansible
-```bash
- $ sudo apt-get install software-properties-common
- $ sudo apt-add-repository ppa:ansible/ansible
- $ sudo apt-get update
- $ sudo apt-get install ansible
-```
-# Install Vagrant On Ubuntu 16.04
-```bash
- $ sudo apt-get update
- $ apt-cache show vagrant
- $ sudo apt-get install vagrant
-```
 # Vagrant File Parameters
 
 Setup these parameters in vagrant file to select no of node and memory and other specifications  
