@@ -17,7 +17,7 @@ SUPPORTED_OS = {
 }
 
 # Defaults for config options defined in CONFIG
-$num_instances = 2
+$num_instances = 3
 $instance_name_prefix = "k8s"
 $vm_gui = false
 $vm_memory = 1505
@@ -32,7 +32,7 @@ $etcd_instances = 1
 # The first two nodes are kube masters
 $kube_master_instances = $num_instances == 1 ? $num_instances : ($num_instances - 1)
 # All nodes are kube nodes
-$kube_node_instances = 2
+$kube_node_instances = 3
 # The following only works when using the libvirt provider
 $kube_node_instances_with_disks = false
 $kube_node_instances_with_disks_size = "20G"
@@ -48,24 +48,23 @@ end
 
 $box = SUPPORTED_OS[$os][:box]
 # if $inventory is not set, try to use example
-$inventory = File.join(File.dirname(__FILE__), "inventory", "sample") if ! $inventory
+#$inventory = File.join(File.dirname(__FILE__), "inventory", "sample") if ! $inventory
 
 # if $inventory has a hosts file use it, otherwise copy over vars etc
 # to where vagrant expects dynamic inventory to be.
-if ! File.exist?(File.join(File.dirname($inventory), "hosts"))
-  $vagrant_ansible = File.join(File.dirname(__FILE__), ".vagrant",
-                       "provisioners", "ansible")
-  FileUtils.mkdir_p($vagrant_ansible) if ! File.exist?($vagrant_ansible)
-  if ! File.exist?(File.join($vagrant_ansible,"inventory"))
-    FileUtils.ln_s($inventory, File.join($vagrant_ansible,"inventory"))
-  end
-end
-
+#if ! File.exist?(File.join(File.dirname($inventory), "hosts"))
+#  $vagrant_ansible = File.join(File.dirname(__FILE__), ".vagrant",
+#                       "provisioners", "ansible")
+#  FileUtils.mkdir_p($vagrant_ansible) if ! File.exist?($vagrant_ansible)
+#  if ! File.exist?(File.join($vagrant_ansible,"inventory"))
+#    FileUtils.ln_s($inventory, File.join($vagrant_ansible,"inventory"))
+#  end
+#end
 
 
 Vagrant.configure("2") do |config|
   # always use Vagrants insecure key
-  config.ssh.insert_key = false
+  config.ssh.insert_key = true
   config.vm.box = $box
   if SUPPORTED_OS[$os].has_key? :box_url
     config.vm.box_url = SUPPORTED_OS[$os][:box_url]
@@ -107,7 +106,13 @@ Vagrant.configure("2") do |config|
       ip = "#{$subnet}.#{i+100}"
       host_vars[vm_name] = {
         "ip": ip,
+	"ansible_host": ip,
         "bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
+	"ansible_port": 22,
+	"ansible_user": 'vagrant',
+	"ansible_connection": 'ssh',
+	"ansible_ssh_user": 'vagrant',
+	"ansible_ssh_pass": 'vagrant',
         "local_release_dir" => $local_release_dir,
         "download_run_once": "False",
         "kube_network_plugin": $network_plugin
@@ -140,10 +145,9 @@ Vagrant.configure("2") do |config|
         config.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "cluster.yml"
           ansible.install_mode = "pip"
-          ansible.inventory_path = "inventory/sample/vagrant_ansible_inventory"
-          if File.exist?(File.join(File.dirname($inventory), "hosts"))
-            ansible.inventory_path = $inventory
-          end
+#          if File.exist?(File.join(File.dirname($inventory), "hosts"))
+#            ansible.inventory_path = $inventory
+#          end
           ansible.become = true
           ansible.limit = "all"
           ansible.raw_arguments = ["--forks=#{$num_instances}", "--flush-cache"]
