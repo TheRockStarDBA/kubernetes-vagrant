@@ -37,10 +37,10 @@
   when: gen_certs|default(false)
 
 - name: Gen_certs | copy certs generation script
-  copy:
-    src: "make-ssl-etcd.sh"
+  template:
+    src: "make-ssl-etcd.sh.j2"
     dest: "{{ etcd_script_dir }}/make-ssl-etcd.sh"
-    mode: 0700
+    mode: '0700'
   run_once: yes
   delegate_to: "{{groups['etcd'][0]}}"
   when: gen_certs|default(false)
