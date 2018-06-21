@@ -37,14 +37,13 @@
   when: gen_certs|default(false)
 
 - name: Gen_certs | copy certs generation script
-  template:
-    src: "make-ssl-etcd.sh.j2"
+  get_url:
+    url: "https://raw.githubusercontent.com/kubernetes-incubator/kubespray/master/roles/etcd/files/make-ssl-etcd.sh"
     dest: "{{ etcd_script_dir }}/make-ssl-etcd.sh"
     mode: '0700'
   run_once: yes
   delegate_to: "{{groups['etcd'][0]}}"
   when: gen_certs|default(false)
-
 
 - name: Gen_certs | run cert generation script
   command: "bash -x {{ etcd_script_dir }}/make-ssl-etcd.sh -f {{ etcd_config_dir }}/openssl.conf -d {{ etcd_cert_dir }}"
