@@ -72,3 +72,17 @@ Confirm your installation by running a command ( you need to ssh into the master
  $ kubectl get nodes
  $ kubectl get pods --all-namespaces
 ```
+
+
+### Connect to Dashboard
+
+```
+https://172.17.8.101:30910/#!/login
+```
+
+Generate Key
+```
+kubectl -n kube-system describe secrets \
+`kubectl -n kube-system get secrets | awk '/clusterrole-aggregation-controller/ {print $1}'` \
+| awk '/token:/ {print $2}'
+```
