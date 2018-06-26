@@ -38,6 +38,7 @@ $kube_node_instances_with_disks = false
 $kube_node_instances_with_disks_size = "20G"
 $kube_node_instances_with_disks_number = 2
 
+$jumpbox_node = 1
 $local_release_dir = "/vagrant/temp"
 
 host_vars = {}
@@ -145,4 +146,63 @@ Vagrant.configure("2") do |config|
 
     end
   end
+
+  if $jumpbox_node then
+	SUPPORTED_OS = {
+
+	  "ubuntu"        => {box: "bento/ubuntu-16.04", bootstrap_os: "ubuntu", user: "vagrant"},
+
+	}
+    config.vm.define vm_name = "mssql-jump" do |config|
+	  config.vm.hostname = vm_name
+	  config.vm.provider :virtualbox do |vb|
+        vb.gui = $vm_gui
+        vb.memory = $vm_memory
+        vb.cpus = $vm_cpus
+      end
+	  
+	  config.vm.provider :libvirt do |lv|
+        lv.memory = $vm_memory
+      end
+	  
+	  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
+	  
+	  ip = "#{$subnet}.#{99}"
+	  host_vars[vm_name] = {
+        "ip": ip,
+	    "ansible_host": ip,
+        "bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
+	    "ansible_port": 22,
+	    "ansible_user": 'vagrant',
+	    "ansible_connection": 'ssh',
+	    "ansible_ssh_user": 'vagrant',
+	    "ansible_ssh_pass": 'vagrant',
+        "local_release_dir" => $local_release_dir,
+        "download_run_once": "False",
+        "kube_network_plugin": $network_plugin
+      }
+
+      config.vm.network :private_network, ip: ip
+      config.ssh.username = "vagrant"
+      config.ssh.password = "vagrant"
+
+      # Disable swap for each vm
+      config.vm.provision "shell", inline: "swapoff -a"
+      config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
+	  
+	  config.vm.provision "ansible_local" do |ansible|
+        ansible.playbook = "jump.yml"
+        ansible.install_mode = "pip"
+        ansible.become = true
+        ansible.limit = "all"
+        ansible.raw_arguments = ["--flush-cache"]
+        ansible.host_vars = host_vars
+        ansible.groups = {
+			"jump-host" => ["mssql-jump"]
+        }
+      end
+	  
+	end
+  end
+  
 end
