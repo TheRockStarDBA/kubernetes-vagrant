@@ -1,7 +1,9 @@
 # Vagrant For K8's
 
-This vagrant script shall install kubernetes cluster on windows using vagrant and Virtualbox.
+This vagrant script shall install kubernetes cluster on Linux/Windows using vagrant and Virtualbox.
+
 ## Dependencies
+
   - Vagrant.require_version >= 2.0.0
   - Virtualbox
  
@@ -44,10 +46,26 @@ Setup these parameters in vagrant file to select no of node and memory and other
 
 # K8's installation using vagrant
 
- - go inside the  directory where vagrant file is present.
- - run the command ```vagrant up```
- - after the installation completes run the command ``` vagrant status ```
- - In order to ssh into the VM's created run the command ``` vagrant ssh node_name```
+```
+cd kubernetes-vagrant
+vagrant up 
+
+vagrant status 
+```
+
+### Connect to VM
+
+```
+vagrant ssh node_name
+```
+
+| VM            |Role      | IP Address    |Box               |
+| ------------- |----------| ------------- |------------------|
+| k8s-01        | master   | 172.17.8.101  |bento/ubuntu-16.04|
+| k8s-02        | node     | 172.17.8.102  |bento/ubuntu-16.04|
+| k8s-0X        | node     | 172.17.8.10X  |bento/ubuntu-16.04|
+| mssql-jump    | jump-box | 172.17.8.201  |bento/ubuntu-16.04|  
+
 
 Confirm your installation by running a command ( you need to ssh into the master )
 ```bash

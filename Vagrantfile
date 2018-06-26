@@ -148,11 +148,7 @@ Vagrant.configure("2") do |config|
   end
 
   if $jumpbox_node then
-	SUPPORTED_OS = {
 
-	  "ubuntu"        => {box: "bento/ubuntu-16.04", bootstrap_os: "ubuntu", user: "vagrant"},
-
-	}
     config.vm.define vm_name = "mssql-jump" do |config|
 	  config.vm.hostname = vm_name
 	  config.vm.provider :virtualbox do |vb|
