@@ -20,7 +20,7 @@ SUPPORTED_OS = {
 $num_instances = 2
 $instance_name_prefix = "k8s"
 $vm_gui = false
-$vm_memory = 3500
+$vm_memory = 3000
 $vm_cpus = 1
 $shared_folders = {}
 $forwarded_ports = {}
@@ -90,13 +90,13 @@ Vagrant.configure("2") do |config|
       ip = "#{$subnet}.#{i+100}"
       host_vars[vm_name] = {
         "ip": ip,
-	"ansible_host": ip,
+	      "ansible_host": ip,
         "bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
-	"ansible_port": 22,
-	"ansible_user": 'vagrant',
-	"ansible_connection": 'ssh',
-	"ansible_ssh_user": 'vagrant',
-	"ansible_ssh_pass": 'vagrant',
+	      "ansible_port": 22,
+	      "ansible_user": 'vagrant',
+	      "ansible_connection": 'ssh',
+	      "ansible_ssh_user": 'vagrant',
+	      "ansible_ssh_pass": 'vagrant',
         "local_release_dir" => $local_release_dir,
         "download_run_once": "False",
         "kube_network_plugin": $network_plugin
@@ -106,7 +106,7 @@ Vagrant.configure("2") do |config|
       config.ssh.username = "vagrant"
       config.ssh.password = "vagrant"
 
-
+      config.vm.network "forwarded_port", guest: 30910 , host: 30910 , auto_correct: true
       # Disable swap for each vm
       config.vm.provision "shell", inline: "swapoff -a"
       config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
