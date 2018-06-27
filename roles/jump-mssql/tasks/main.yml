@@ -1,4 +1,8 @@
 ---
+- name: Set SQLCMD to PATH
+  shell: |
+    echo "PATH=\"$PATH:/opt/mssql-tools/bin\"" > /etc/environment
+
 - name: Install SQLCMD
   shell: |
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
