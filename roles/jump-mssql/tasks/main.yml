@@ -1,12 +1,29 @@
 ---
-- name: Install SQLCMD on Ubuntu or Debian
-  when: (bootstrap_os == "ubuntu") or (bootstrap_os == "debian")
+- name: Set SQLCMD to PATH
+  shell: |
+    echo "PATH=\"$PATH:/opt/mssql-tools/bin\"" > /etc/environment
+
+- name: Install SQLCMD
   shell: |
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
     curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | tee /etc/apt/sources.list.d/msprod.list
     
     apt-get update 
     ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get install -y mssql-tools unixodbc-dev
+
+- name: Install kubectl
+  shell: |
+    apt-get update && sudo apt-get install -y apt-transport-https
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
     
-    echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> /etc/environment
+    touch /etc/apt/sources.list.d/kubernetes.list     
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
     
+    apt-get update
+    apt-get install -y kubectl
+
+- name: Install Helm
+  shell: |
+    curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+    chmod 700 get_helm.sh
+    ./get_helm.sh

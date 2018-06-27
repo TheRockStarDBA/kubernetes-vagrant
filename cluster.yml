@@ -122,3 +122,4 @@
   roles:
     - { role: kubespray-defaults}
     - { role: kubernetes-apps, tags: apps }
+    - { role: helm-apps}

@@ -16,6 +16,12 @@ SUPPORTED_OS = {
 
 }
 
+SUPPORTED_JUMP_OS = {
+
+  "ubuntu"        => {box: "bento/ubuntu-16.04", bootstrap_os: "ubuntu", user: "vagrant"},
+
+}
+
 # Defaults for config options defined in CONFIG
 $num_instances = 2
 $instance_name_prefix = "k8s"
@@ -148,8 +154,7 @@ Vagrant.configure("2") do |config|
   end
 
   if $jumpbox_node then
-
-    config.vm.define vm_name = "mssql-jump" do |config|
+    config.vm.define vm_name = "client-admin" do |config|
 	  config.vm.hostname = vm_name
 	  config.vm.provider :virtualbox do |vb|
         vb.gui = $vm_gui
@@ -162,12 +167,12 @@ Vagrant.configure("2") do |config|
       end
 
 	  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
-
-	  ip = "#{$subnet}.#{99}"
+	  
+	  ip = "#{$subnet}.#{201}"
 	  host_vars[vm_name] = {
         "ip": ip,
 	    "ansible_host": ip,
-        "bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
+        "bootstrap_os": SUPPORTED_JUMP_OS[$os][:bootstrap_os],
 	    "ansible_port": 22,
 	    "ansible_user": 'vagrant',
 	    "ansible_connection": 'ssh',
@@ -194,7 +199,7 @@ Vagrant.configure("2") do |config|
         ansible.raw_arguments = ["--flush-cache"]
         ansible.host_vars = host_vars
         ansible.groups = {
-			"jump-host" => ["mssql-jump"]
+			"jump-host" => ["client-admin"]
         }
       end
 
