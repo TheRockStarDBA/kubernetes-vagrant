@@ -156,13 +156,13 @@ Vagrant.configure("2") do |config|
         vb.memory = $vm_memory
         vb.cpus = $vm_cpus
       end
-	  
+
 	  config.vm.provider :libvirt do |lv|
         lv.memory = $vm_memory
       end
-	  
+
 	  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
-	  
+
 	  ip = "#{$subnet}.#{99}"
 	  host_vars[vm_name] = {
         "ip": ip,
@@ -185,7 +185,7 @@ Vagrant.configure("2") do |config|
       # Disable swap for each vm
       config.vm.provision "shell", inline: "swapoff -a"
       config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
-	  
+
 	  config.vm.provision "ansible_local" do |ansible|
         ansible.playbook = "jump.yml"
         ansible.install_mode = "pip"
@@ -197,8 +197,8 @@ Vagrant.configure("2") do |config|
 			"jump-host" => ["mssql-jump"]
         }
       end
-	  
+
 	end
   end
-  
+
 end

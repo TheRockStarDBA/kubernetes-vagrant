@@ -2,7 +2,7 @@
 helm_enabled: true
 
 # specify a dir and attach it to helm for HELM_HOME.
-helm_home_dir: "/home/vagrant/.helm"
+helm_home_dir: "/root/.helm"
 
 # Deployment mode: host or docker
 helm_deployment_type: host
