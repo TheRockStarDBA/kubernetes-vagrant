@@ -1,0 +1,35 @@
+---
+- name: Helm apps | Set permissions
+  file:
+    path: "/home/{{ helm_user }}/.helm"
+    owner: "{{ helm_user }}"
+    group: "{{ helm_user }}"
+    mode: 0775
+    recurse: true
+    
+- name: Helm apps | Init
+  become: true
+  become_user: "{{ helm_user }}"
+  command: /usr/local/bin/helm init --client-only
+
+- name: Helm apps | Set Repo
+  become: true
+  become_user: "{{ helm_user }}"
+  command: /usr/local/bin/helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
+
+- name: Helm apps | Wait deploy POD
+  become: true
+  become_user: "{{ helm_user }}"
+  shell: /usr/local/bin/kubectl -n kube-system get po | grep tiller-deploy
+  register: cmd_res
+  retries: 30
+  delay: 5
+  until: cmd_res.stdout_lines | list | count >= 1
+ 
+- pause:
+    seconds: 30
+  
+- name: Helm apps | Deploy MSSQL
+  become: true
+  become_user: "{{ helm_user }}"
+  command: /usr/local/bin/helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer
