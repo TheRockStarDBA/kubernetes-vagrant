@@ -27,9 +27,8 @@
   until: cmd_res.stdout_lines | list | count >= 1
  
 - pause:
-    seconds: 30
-  
-- name: Helm apps | Deploy MSSQL
-  become: true
-  become_user: "{{ helm_user }}"
-  command: /usr/local/bin/helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer
+    minutes: 1
+
+- name: Helm | Install mymssql
+  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer
+  when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
