@@ -11,19 +11,8 @@
     apt-get update 
     ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get install -y mssql-tools unixodbc-dev
 
-- name: Install kubectl
-  shell: |
-    apt-get update && sudo apt-get install -y apt-transport-https
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-    
-    touch /etc/apt/sources.list.d/kubernetes.list     
-    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
-    
-    apt-get update
-    apt-get install -y kubectl
-
-- name: Install Helm
-  shell: |
-    curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
-    chmod 700 get_helm.sh
-    ./get_helm.sh
+- name: Kubectl
+  include_tasks: "install_kubectl.yml"
+  
+- name: Helm v.{{ helm_version }}
+  include_tasks: "install_helm.yml"

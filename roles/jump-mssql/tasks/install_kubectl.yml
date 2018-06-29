@@ -1,0 +1,26 @@
+---
+- name: Install kubectl
+  shell: |
+    apt-get update && sudo apt-get install -y apt-transport-https
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    
+    touch /etc/apt/sources.list.d/kubernetes.list     
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+    
+    apt-get update
+    apt-get install -y kubectl
+
+- file:
+    path: /home/vagrant/.kube
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: 0775
+    
+- name: Copy kubectl config
+  copy:
+    src: /vagrant/tokens/config
+    dest: /home/vagrant/.kube/config
+    owner: vagrant
+    group: vagrant
+    mode: 0755

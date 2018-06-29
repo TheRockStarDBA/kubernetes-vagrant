@@ -1,0 +1,11 @@
+---
+- file:
+    path: "{{ ansible_path }}/tokens"
+    state: directory
+    mode: 0775
+    
+- name: Get Kubectl config
+  shell: |
+    cp /root/.kube/config {{ ansible_path }}/tokens/config
+
+    
