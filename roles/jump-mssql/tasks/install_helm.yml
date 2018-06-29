@@ -1,0 +1,32 @@
+---
+- name: Download Helm v.{{ helm_version }}
+  get_url: 
+    url: https://storage.googleapis.com/kubernetes-helm/helm-v{{ helm_version }}-linux-amd64.tar.gz
+    dest: /home/vagrant/helm.tar.gz
+    mode: 0777
+
+- file:
+    path: /home/vagrant/helm_tmp
+    state: directory
+    mode: 0755
+    
+- name: Unarchive Helm v.{{ helm_version }}
+  unarchive:
+    src: /home/vagrant/helm.tar.gz
+    dest: /home/vagrant/helm_tmp
+
+- name: Install Helm v.{{ helm_version }}
+  copy:
+    src: /home/vagrant/helm_tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    owner: root
+    group: root
+    mode: 0755
+
+- file:
+    path: /home/vagrant/helm_tmp
+    state: absent
+
+- file:
+    path: /home/vagrant/helm.tar.gz
+    state: absent
