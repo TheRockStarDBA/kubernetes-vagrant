@@ -6,7 +6,7 @@
     group: "{{ helm_user }}"
     mode: 0775
     recurse: true
-    
+
 - name: Helm apps | Init
   become: true
   become_user: "{{ helm_user }}"
@@ -25,10 +25,28 @@
   retries: 30
   delay: 5
   until: cmd_res.stdout_lines | list | count >= 1
- 
+
 - pause:
     minutes: 1
 
+- name: Creates directory for data
+  file: path=/vagrant/volumes/data state=directory
+
+- name: Creates directory for transactionlog
+  file: path=/vagrant/volumes/transactionlog state=directory
+
+- name: Creates directory for backup
+  file: path=/vagrant/volumes/backup state=directory
+
+- name: Creates directory for master
+  file: path=/vagrant/volumes/master state=directory
+
+- name: Creates directory for storing helm files
+  file: path=/home/vagrant/helmcharts state=directory mode="0755"
+
+- name: copy helm files to the remote machine
+  copy: src=mymssql dest=/home/vagrant/helmcharts mode="0755"
+
 - name: Helm | Install mymssql
-  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer
+  command: chdir=/home/vagrant/helmcharts/mymssql helm install --name mymssql --set acceptEula.value=Y --set edition.value=Developer .
   when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]

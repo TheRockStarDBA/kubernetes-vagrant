@@ -66,10 +66,10 @@ Vagrant.configure("2") do |config|
   if Vagrant.has_plugin?("vagrant-vbguest") then
     config.vbguest.auto_update = false
   end
-  
+
   $num_loop = $num_instances + $jumpbox_node
   (1..$num_loop).each do |i|
-  
+
     if i == $num_loop && $jumpbox_node != 0 then
 	  name = "client-admin"
 	  ip = "#{$subnet}.#{i+201}"
@@ -79,7 +79,7 @@ Vagrant.configure("2") do |config|
 	  ip = "#{$subnet}.#{i+100}"
 	  bootstrap_os = SUPPORTED_OS[$os][:bootstrap_os]
 	end
-	
+
 	config.vm.define vm_name = name % [$instance_name_prefix, i] do |config|
 	  config.vm.hostname = name
 
@@ -93,7 +93,7 @@ Vagrant.configure("2") do |config|
 
 
 	  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
-
+    config.vm.synced_folder "./volumes", "/vagrant/volumes", type: "nfs"
 	  $shared_folders.each do |src, dst|
 		config.vm.synced_folder src, dst, type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
 	  end
@@ -130,7 +130,7 @@ Vagrant.configure("2") do |config|
 	  # Disable swap for each vm
 	  config.vm.provision "shell", inline: "swapoff -a"
 	  config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
-	  
+
 	  config.vm.synced_folder "./tokens", "/vagrant/tokens", type: "nfs"
 	  if $kube_node_instances_with_disks
 		# Libvirt
@@ -143,7 +143,7 @@ Vagrant.configure("2") do |config|
 		  end
 		end
 	  end
-	  
+
 	  # Only execute once the Ansible provisioner,
 	  # when all the machines are up and ready.
   if i == $num_loop
