@@ -64,7 +64,7 @@ vagrant ssh node_name
 | k8s-01        | master   | 172.17.8.101  |bento/ubuntu-16.04|
 | k8s-02        | node     | 172.17.8.102  |bento/ubuntu-16.04|
 | k8s-0X        | node     | 172.17.8.10X  |bento/ubuntu-16.04|
-| mssql-jump    | jump-box | 172.17.8.201  |bento/ubuntu-16.04|  
+| client-admin  | jump-box | 172.17.8.201  |bento/ubuntu-16.04|  
 
 NFS storage provionser is installed with storage class named nfs. along with it microsoft sql server is also installed using helm chart 
 
@@ -94,4 +94,13 @@ Generate Key
 kubectl -n kube-system describe secrets \
 `kubectl -n kube-system get secrets | awk '/clusterrole-aggregation-controller/ {print $1}'` \
 | awk '/token:/ {print $2}'
+```
+
+### Secrets 
+
+```
+kubectl get secrets
+kubectl get secrets mymssql-mssql-linux-secret -o yaml
+
+echo 'bUl4M3J0UXF2R2ROWGRJSmNkTmI=' | base64 --decode
 ```
