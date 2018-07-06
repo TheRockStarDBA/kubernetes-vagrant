@@ -5,24 +5,6 @@
     - { role: kubespray-defaults}
     - { role: bastion-ssh-config, tags: ["localhost", "bastion"]}
 
-- hosts: nfs-server
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  gather_facts: false
-  vars:
-    # Need to disable pipelining for bootstrap-os as some systems have requiretty in sudoers set, which makes pipelining
-    # fail. bootstrap-os fixes this on these systems, so in later plays it can be enabled.
-    ansible_ssh_pipelining: false
-  roles:
-    - { role: bootstrap-os, tags: bootstrap-os}
-    
-- hosts: nfs-server
-  any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
-  gather_facts: false
-  vars:
-    ansible_ssh_pipelining: true
-  roles:
-    - { role: nfs-server }
-    
 - hosts: k8s-cluster:etcd:calico-rr
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   gather_facts: false
@@ -34,7 +16,7 @@
     - { role: kubespray-defaults}
     - { role: bootstrap-os, tags: bootstrap-os}
 
-- hosts: jump-host
+- hosts: junp-host
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   gather_facts: false
   vars:
@@ -150,7 +132,6 @@
   roles:
     - { role: kubespray-defaults}
     - { role: kubernetes-apps, tags: apps }
-    - { role: storage-class}
     - { role: helm-apps}
     - { role: post-install}
 

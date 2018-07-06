@@ -41,16 +41,15 @@
 #- name: Creates directory for master
 #  file: path=/vagrant/volumes/master state=directory
 
-#- name: Creates directory for storing helm files
-#  file: path=/home/vagrant/helmcharts state=directory mode="0755"
+- name: Creates directory for storing helm files
+  file: path=/home/vagrant/helmcharts state=directory mode="0755"
 
-#- name: copy helm files to the remote machine
-#  copy: src=mymssql dest=/home/vagrant/helmcharts mode="0755"
+- name: copy helm files to the remote machine
+  copy: src=nfs-server-provisioner dest=/home/vagrant/helmcharts mode="0755"
 
-#- name: Helm | Install mymssql
-#  command: chdir=/home/vagrant/helmcharts/mymssql helm install --name mymssql --set acceptEula.value=Y --set edition.value=Developer .
-#  when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+- name: Helm | Install nfs-server
+  command: chdir=/home/vagrant/helmcharts/nfs-server-provisioner helm install .
 
 - name: Helm | Install mymssql
-  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.enabled=true --set persistence.storageClass=premium
+  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.storageClass=nfs
   when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
