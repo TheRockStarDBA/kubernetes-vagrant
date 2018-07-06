@@ -17,12 +17,6 @@ SUPPORTED_OS = {
 
 }
 
-SUPPORTED_JUMP_OS = {
-
-  "ubuntu"        => {box: "bento/ubuntu-16.04", bootstrap_os: "ubuntu", user: "vagrant"},
-
-}
-
 # Defaults for config options defined in CONFIG
 $num_instances = 2
 $instance_name_prefix = "k8s"
@@ -46,13 +40,29 @@ $kube_node_instances_with_disks_size = "20G"
 $kube_node_instances_with_disks_number = 2
 
 $jumpbox_node = 1
+$nfs_server_node = 1
+$nfs_server = 0
+
 $local_release_dir = "/vagrant/temp"
 
 host_vars = {}
+names = {}
 
+
+if $nfs_server_node != 0 then
+  names["nfs-server"] = {name: "nfs-server", ip: "#{$subnet}.#{202}"}
+  $nfs_server = "#{$subnet}.#{202}"
+end
+(1..$num_instances).each do |i|
+  names["%s-%02d" % [$instance_name_prefix, i]] = {name: "%s-%02d" % [$instance_name_prefix, i], ip: "#{$subnet}.#{i+100}"}
+  last = "%s-%02d" % [$instance_name_prefix, i]
+end
+if $jumpbox_node != 0 then
+  names["client-admin"] = {name: "client-admin", ip: "#{$subnet}.#{201}"}
+  last = "client-admin"
+end 
 
 $box = SUPPORTED_OS[$os][:box]
-
 
 Vagrant.configure("2") do |config|
   # always use Vagrants insecure key
@@ -66,22 +76,10 @@ Vagrant.configure("2") do |config|
   if Vagrant.has_plugin?("vagrant-vbguest") then
     config.vbguest.auto_update = false
   end
-
-  $num_loop = $num_instances + $jumpbox_node
-  (1..$num_loop).each do |i|
-
-    if i == $num_loop && $jumpbox_node != 0 then
-	  name = "client-admin"
-	  ip = "#{$subnet}.#{i+201}"
-	  bootstrap_os = SUPPORTED_OS[$os][:bootstrap_os]
-	else
-	  name = "%s-%02d" % [$instance_name_prefix, i]
-	  ip = "#{$subnet}.#{i+100}"
-	  bootstrap_os = SUPPORTED_OS[$os][:bootstrap_os]
-	end
-
-	config.vm.define vm_name = name % [$instance_name_prefix, i] do |config|
-	  config.vm.hostname = name
+  
+  names.each do |key, i|
+	config.vm.define "%s" % i[:name] do |config|
+	  config.vm.hostname = "%s" % i[:name]
 
 	  if $expose_docker_tcp
 		config.vm.network "forwarded_port", guest: 2375, host: ($expose_docker_tcp + i - 1), auto_correct: true
@@ -91,9 +89,8 @@ Vagrant.configure("2") do |config|
 		config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
 	  end
 
-
 	  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
-    config.vm.synced_folder "./volumes", "/vagrant/volumes", type: "nfs"
+
 	  $shared_folders.each do |src, dst|
 		config.vm.synced_folder src, dst, type: "rsync", rsync__args: ['--verbose', '--archive', '--delete', '-z']
 	  end
@@ -108,10 +105,12 @@ Vagrant.configure("2") do |config|
 	    lv.memory = $vm_memory
 	  end
 
-	  host_vars[vm_name] = {
-		"ip": ip,
-		"ansible_host": ip,
-		"bootstrap_os": bootstrap_os,
+	  host_vars[i[:name]] = {
+		"ip": i[:ip],
+		"subnet": "#{$subnet}.1/24",
+		"nfs_server": $nfs_server,
+		"ansible_host": i[:ip],
+		"bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
 		"ansible_port": 22,
 		"ansible_user": 'vagrant',
 		"ansible_connection": 'ssh',
@@ -122,7 +121,7 @@ Vagrant.configure("2") do |config|
 		"kube_network_plugin": $network_plugin
 	  }
 
-	  config.vm.network :private_network, ip: ip
+	  config.vm.network :private_network, ip: i[:ip]
 	  config.ssh.username = "vagrant"
 	  config.ssh.password = "vagrant"
 
@@ -130,7 +129,7 @@ Vagrant.configure("2") do |config|
 	  # Disable swap for each vm
 	  config.vm.provision "shell", inline: "swapoff -a"
 	  config.vm.provision "shell", inline: "apt-get install sshpass python-netaddr -y"
-
+	  
 	  config.vm.synced_folder "./tokens", "/vagrant/tokens", type: "nfs"
 	  if $kube_node_instances_with_disks
 		# Libvirt
@@ -143,28 +142,27 @@ Vagrant.configure("2") do |config|
 		  end
 		end
 	  end
-
-	  # Only execute once the Ansible provisioner,
-	  # when all the machines are up and ready.
-  if i == $num_loop
-	config.vm.provision "ansible_local" do |ansible|
-	  ansible.playbook = "cluster.yml"
-	  ansible.install_mode = "pip"
-	  ansible.become = true
-	  ansible.limit = "all"
-	  ansible.raw_arguments = ["--forks=#{$num_loop}", "--flush-cache"]
-	  ansible.host_vars = host_vars
-	  #ansible.tags = ['download']
-	  ansible.groups = {
-		"etcd" => ["#{$instance_name_prefix}-0[1:#{$etcd_instances}]"],
-		"kube-master" => ["#{$instance_name_prefix}-0[1:#{$kube_master_instances}]"],
-		"kube-node" => ["#{$instance_name_prefix}-0[1:#{$kube_node_instances}]"],
-		"k8s-cluster:children" => ["kube-master", "kube-node"],
-		"jump-host" => ["client-admin"]
-	  }
-	end
-  end
-
+    if i[:name] == last then
+		config.vm.provision "ansible_local" do |ansible|
+		  ansible.playbook = "cluster.yml"
+		  ansible.install_mode = "pip"
+		  ansible.become = true
+		  ansible.limit = "all"
+		  ansible.raw_arguments = ["--forks=#{names.size}", "--flush-cache"]
+		  ansible.host_vars = host_vars
+		  #ansible.tags = ['download']
+		  ansible.groups = {
+			"etcd" => ["#{$instance_name_prefix}-0[1:#{$etcd_instances}]"],
+			"kube-master" => ["#{$instance_name_prefix}-0[1:#{$kube_master_instances}]"],
+			"kube-node" => ["#{$instance_name_prefix}-0[1:#{$kube_node_instances}]"],
+			"k8s-cluster:children" => ["kube-master", "kube-node"],
+			"jump-host" => ["client-admin"],
+			"nfs-server" => ["nfs-server"]
+		  }
+		end
+    end
+end
+end
 end
 end
 end

@@ -1,0 +1,54 @@
+---
+- name: StorageClass | Build directory
+  when: nfs_server_ip != "0"
+  file: 
+    path: /nfs-class
+    state: directory
+    mode: 0775   
+    
+- name: StorageClass | Build template deployment
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_deployment.yml.j2"
+    dest: /nfs-class/nfs_deployment.yml
+
+- name: StorageClass | Build template class data
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_class_data.yml.j2"
+    dest: /nfs-class/nfs_class_data.yml
+
+- name: StorageClass | Build template Claim data
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/persistence_data.yml.j2"
+    dest: /nfs-class/persistence_data.yml
+
+- name: StorageClass | Build template class log
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_class_log.yml.j2"
+    dest: /nfs-class/nfs_class_log.yml
+
+- name: StorageClass | Build template Claim log
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/persistence_log.yml.j2"
+    dest: /nfs-class/persistence_log.yml
+    
+- name: StorageClass | Build template class backup
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_class_backup.yml.j2"
+    dest: /nfs-class/nfs_class_backup.yml
+
+- name: StorageClass | Build template Claim backup
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/persistence_backup.yml.j2"
+    dest: /nfs-class/persistence_backup.yml
+    
+- name: StorageClass | Init
+  when: nfs_server_ip != "0"
+  shell: |
+    kubectl apply -f /nfs-class
