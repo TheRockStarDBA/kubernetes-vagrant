@@ -50,6 +50,9 @@
 - name: Helm | Install nfs-server
   command: chdir=/home/vagrant/helmcharts/nfs-server-provisioner helm install .
 
+- pause:
+    minutes: 1
+
 - name: Helm | Install mymssql
   command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.storageClass=nfs
   when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
