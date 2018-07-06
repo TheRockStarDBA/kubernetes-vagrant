@@ -52,5 +52,5 @@
 #  when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
 
 - name: Helm | Install mymssql
-  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.enabled=true --set persistence.existingDataClaim=mssql-data-claim --set persistence.existingTransactionLogClaim=mssql-log-claim --set persistence.existingBackupClaim=mssql-backup-claim
+  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.enabled=true --set persistence.storageClass=premium
   when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
