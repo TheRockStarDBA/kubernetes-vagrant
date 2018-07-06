@@ -66,13 +66,22 @@ vagrant ssh node_name
 | k8s-0X        | node     | 172.17.8.10X  |bento/ubuntu-16.04|
 | mssql-jump    | jump-box | 172.17.8.201  |bento/ubuntu-16.04|  
 
+NFS storage provionser is installed with storage class named nfs. along with it microsoft sql server is also installed using helm chart 
 
 Confirm your installation by running a command ( you need to ssh into the master )
 ```bash
  $ kubectl get nodes
+ $ kubectl get pods
+ $ kubectl get storageclass
+ $ kubectl get pvc
  $ kubectl get pods --all-namespaces
 ```
 
+
+For helm list use 
+```bash 
+$ helm ls
+```
 
 ### Connect to Dashboard
 
