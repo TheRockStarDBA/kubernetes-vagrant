@@ -1,2 +1,2 @@
 ---
-cluster_sub_net: "{{ subnet }}"
+cluster_sub_net: "{{ subnet }}.1/24"

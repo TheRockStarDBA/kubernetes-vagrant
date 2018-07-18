@@ -20,7 +20,7 @@
 - name: Helm apps | Wait deploy POD
   become: true
   become_user: "{{ helm_user }}"
-  shell: /usr/local/bin/kubectl -n kube-system get po | grep tiller-deploy
+  shell: /usr/bin/kubectl -n kube-system get po | grep tiller-deploy
   register: cmd_res
   retries: 30
   delay: 5
@@ -29,6 +29,53 @@
 - pause:
     minutes: 1
 
+- name: Help apps | Copy charts to local repository
+  copy:
+    src: /vagrant/charts/ingress 
+    dest: "/home/{{ helm_user }}/.helm/repository/local/"
+    owner: "{{ helm_user }}"
+    group: "{{ helm_user }}"
+    mode: 0775
+
+- name: Help apps | Copy | Web1
+  copy:
+    src: /vagrant/charts/prometheus
+    dest: "/home/{{ helm_user }}/.helm/repository/local/"
+    owner: "{{ helm_user }}"
+    group: "{{ helm_user }}"
+    mode: 0775    
+
+- name: Help apps | Copy | Web2
+  copy:
+    src: /vagrant/charts/gocd
+    dest: "/home/{{ helm_user }}/.helm/repository/local/"
+    owner: "{{ helm_user }}"
+    group: "{{ helm_user }}"
+    mode: 0775     
+
+- name: Help apps | Copy | Web3
+  copy:
+    src: /vagrant/charts/mailhog
+    dest: "/home/{{ helm_user }}/.helm/repository/local/"
+    owner: "{{ helm_user }}"
+    group: "{{ helm_user }}"
+    mode: 0775    
+
+- name: Helm | Build dependency web1
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm dependency update /home/vagrant/.helm/repository/local/prometheus
+  
+- name: Helm | Build dependency web2
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm dependency update /home/vagrant/.helm/repository/local/gocd
+
+- name: Helm | Build dependency web3
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm dependency update /home/vagrant/.helm/repository/local/mailhog
+    
 #- name: Creates directory for data
 #  file: path=/vagrant/volumes/data state=directory
 
@@ -52,5 +99,26 @@
 #  when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
 
 - name: Helm | Install mymssql
-  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.enabled=true --set persistence.storageClass=premium
-  when: ((helm_container is defined and helm_container.changed) or (helm_task_result is defined and helm_task_result.changed)) and not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm install --name mymssql stable/mssql-linux --set acceptEula.value=Y --set edition.value=Developer --set persistence.enabled=true --set persistence.existingDataClaim=mssql-data-claim --set persistence.existingTransactionLogClaim=mssql-log-claim --set persistence.existingBackupClaim=mssql-backup-claim --set persistence.storageClass=premium
+
+- name: Helm | Install Web1
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm install --name web1 local/prometheus --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false
+  
+- name: Helm | Install Web2
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm install --name web2 local/gocd
+  
+- name: Helm | Install Web3
+  become: true
+  become_user: "{{ helm_user }}"  
+  command: helm install --name web3 local/mailhog
+  
+- name: Helm | Install ingress
+  become: true
+  become_user: "{{ helm_user }}"
+  command: helm install --name ingress local/ingress --set controller.hostNetwork=true --set controller.kind=DaemonSet --set controller.daemonset.useHostPort=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=31080 --set controller.service.nodePorts.https=31443

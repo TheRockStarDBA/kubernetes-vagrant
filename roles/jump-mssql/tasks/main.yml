@@ -16,3 +16,9 @@
   
 - name: Helm v.{{ helm_version }}
   include_tasks: "install_helm.yml"
+
+- name: Docker
+  include_tasks: "install_docker.yml"
+
+- name: Nginx
+  include_tasks: "run_docker.yml"

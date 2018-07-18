@@ -1,0 +1,33 @@
+upstream nodes_http {
+{% for number in range(101, 101 + count_nodes) %}
+  server {{ cluster_sub_net }}.{{ number }}:31080;
+{% endfor %}
+}      
+
+upstream nodes_https {
+{% for number in range(101, 101 + count_nodes) %}
+  server {{ cluster_sub_net }}.{{ number }}:31443;
+{% endfor %}
+}     
+
+server {
+listen 80;
+  location / {
+    access_log off;
+    proxy_pass http://nodes_http;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+
+server {
+  listen 443;
+  location / {
+    access_log off;
+    proxy_pass http://nodes_https;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}   
