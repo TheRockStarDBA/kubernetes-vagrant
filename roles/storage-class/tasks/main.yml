@@ -30,6 +30,30 @@
     src: "{{ role_path }}/templates/nfs_class_backup.yml.j2"
     dest: /nfs-class/nfs_class_backup.yml
 
+- name: StorageClass | Build template Claim backup
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/persistence_backup.yml.j2"
+    dest: /nfs-class/persistence_backup.yml
+
+- name: StorageClass | Build template account
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_account.yml.j2"
+    dest: /nfs-class/nfs_account.yml
+
+- name: StorageClass | Build template account Role
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_account_role.yml.j2"
+    dest: /nfs-class/nfs_account_role.yml
+
+- name: StorageClass | Build template account RoleBinding
+  when: nfs_server_ip != "0"
+  template:
+    src: "{{ role_path }}/templates/nfs_account_role_bind.yml.j2"
+    dest: /nfs-class/nfs_account_role_bind.yml
+    
 - name: StorageClass | Init
   when: nfs_server_ip != "0"
   shell: |

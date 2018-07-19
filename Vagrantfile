@@ -50,15 +50,21 @@ names = {}
 
 
 if $nfs_server_node != 0 then
-  names["nfs-server"] = {name: "nfs-server", ip: "#{$subnet}.#{202}"}
+  names["nfs-server"] = {name: "nfs-server", 
+                         ip: "#{$subnet}.#{202}",
+						 forwarded_ports: {}}
   $nfs_server = "#{$subnet}.#{202}"
 end
 (1..$num_instances).each do |i|
-  names["%s-%02d" % [$instance_name_prefix, i]] = {name: "%s-%02d" % [$instance_name_prefix, i], ip: "#{$subnet}.#{i+100}"}
+  names["%s-%02d" % [$instance_name_prefix, i]] = {name: "%s-%02d" % [$instance_name_prefix, i], 
+                                                   ip: "#{$subnet}.#{i+100}",
+												   forwarded_ports: {}}
   last = "%s-%02d" % [$instance_name_prefix, i]
 end
 if $jumpbox_node != 0 then
-  names["client-admin"] = {name: "client-admin", ip: "#{$subnet}.#{201}"}
+  names["client-admin"] = {name: "client-admin", 
+                           ip: "#{$subnet}.#{201}", 
+						   forwarded_ports: [[9080,80], [9443,443]]}
   last = "client-admin"
 end 
 
@@ -107,8 +113,9 @@ Vagrant.configure("2") do |config|
 
 	  host_vars[i[:name]] = {
 		"ip": i[:ip],
-		"subnet": "#{$subnet}.1/24",
+		"subnet": "#{$subnet}",
 		"nfs_server": $nfs_server,
+		"count_nodes": $kube_node_instances,
 		"ansible_host": i[:ip],
 		"bootstrap_os": SUPPORTED_OS[$os][:bootstrap_os],
 		"ansible_port": 22,
@@ -142,6 +149,13 @@ Vagrant.configure("2") do |config|
 		  end
 		end
 	  end
+    
+    if i[:forwarded_ports] then
+      i[:forwarded_ports].each do |guest, host|
+	    config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+	  end
+	end
+	
     if i[:name] == last then
 		config.vm.provision "ansible_local" do |ansible|
 		  ansible.playbook = "cluster.yml"
@@ -164,4 +178,3 @@ Vagrant.configure("2") do |config|
 end
 end
 end
-

@@ -47,21 +47,29 @@
 - file: 
     path: /data
     state: directory
+    owner: nobody
+    group: nogroup
     mode: 0775   
 
 - file: 
     path: /data/nfs_data
     state: directory
+    owner: nobody
+    group: nogroup
     mode: 0775  
 
 - file: 
     path: /data/nfs_log
     state: directory
+    owner: nobody
+    group: nogroup    
     mode: 0775  
 
 - file: 
     path: /data/nfs_backup
     state: directory
+    owner: nobody
+    group: nogroup    
     mode: 0775  
     
 - name: NFS | Install | Set exports

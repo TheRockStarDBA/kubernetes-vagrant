@@ -135,7 +135,6 @@
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
   roles:
     - { role: kubespray-defaults}
-    - { role: network_plugin/calico/rr, tags: network }
 
 - hosts: k8s-cluster
   any_errors_fatal: "{{ any_errors_fatal | default(true) }}"
@@ -151,7 +150,6 @@
     - { role: kubespray-defaults}
     - { role: kubernetes-apps, tags: apps }
     - { role: storage-class}
-    - { role: helm-apps}
     - { role: post-install}
 
 - hosts: jump-host
@@ -161,3 +159,4 @@
     ansible_ssh_pipelining: true
   roles:
       - { role: jump-mssql}
+      - { role: helm-apps}
